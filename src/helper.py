@@ -74,7 +74,7 @@ class Mosaic:
         self.kpList, self.desList = self.extractFeatures()
     
 
-    def extractFeatures(self) -> tuple[list, list]:
+    def extractFeatures(self, siftParams=None) -> tuple[list, list]:
         """
         Extracts SIFT keypoints and descriptors from each image in the image list.
         Returns:
