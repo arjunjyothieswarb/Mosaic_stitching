@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+import yaml
 import os
 
 def LoadImages(dirPath: str, scale: tuple=None) -> list[np.ndarray]:
@@ -65,13 +66,29 @@ class Mosaic:
     def __init__(self, dirPath):
         
         self.dirPath = dirPath
-        self.scaleDownFactor = 0.3
+        self.scaleDownFactor = 1
+
+        with open("./config/config.yaml") as f:
+            config = yaml.safe_load(f)
+        
+        self.siftParams = {
+            "nFeatures": config["SIFT"]["nFeatures"],
+            "nOctaveLayers": config["SIFT"]["nOctaveLayers"],
+            "contrastThreshold": config["SIFT"]["contrastThreshold"],
+            "edgeThreshold": config["SIFT"]["edgeThreshold"],
+            "sigma": config["SIFT"]["sigma"]
+        }
         
         # Loading the images
-        self.imageList = LoadImages(self.dirPath, (self.scaleDownFactor, self.scaleDownFactor))
+        # self.imageList = LoadImages(self.dirPath, (self.scaleDownFactor, self.scaleDownFactor))
+        
+        # Initializing the Image list
+        self.imageList = []
+        self.imageCount = 0
 
-        # Extract the key-points
-        self.kpList, self.desList = self.extractFeatures()
+        # Initializing the key-point list and the descriptor list
+        self.kpList = []
+        self.desList = []
     
 
     def extractFeatures(self, siftParams=None) -> tuple[list, list]:
@@ -84,7 +101,12 @@ class Mosaic:
         """
 
         # Creating the SIFT object
-        sift = cv.SIFT.create()
+        sift = cv.SIFT.create(
+            nfeatures = self.siftParams["nFeatures"],
+            nOctaveLayers = self.siftParams["nOctaveLayers"],
+            contrastThreshold = self.siftParams["contrastThreshold"],
+            edgeThreshold = self.siftParams["edgeThreshold"]
+        )
 
         kpList = []
         desList = []
@@ -99,7 +121,11 @@ class Mosaic:
             desList.append(des)
 
         return (kpList, desList)
-    
+
+    def InitConfig(self):
+
+        # Opening and laoding the config file
+        with open("./config/config.yaml") as f:
+            config = yaml.safe_load()
 
         
-
