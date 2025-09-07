@@ -125,7 +125,13 @@ class Mosaic:
 
         return (kpList, desList)
     
-    def findMatches(self):
+    def findMatches(self) -> None:
+        """
+        Finds matching key-points between consecutive images in the image list.
+        Updates matchesList of the object. 
+        Returns:
+            None
+        """
 
         # BF matcher with default params
         bf = cv.BFMatcher()
@@ -145,7 +151,15 @@ class Mosaic:
         
         return None
 
-    def computeHomography(self)->tuple[list, list]:
+    def computeHomography(self) -> tuple[list, list]:
+        """
+        Computes the homographic transform between consecutive images in the image list. The
+        function also returns the mask to remove all the outliers.
+        Returns:
+            tuple[list, list]: A tuple containing two lists:
+                - homographicTransformList: List of homographic transforms between consecutive images
+                - matchesMaskList: List of masks that can be used to mask the outlying matches
+        """
 
         matchesMaskList = []
         homographicTransformList = []
@@ -177,8 +191,10 @@ class Mosaic:
         return (homographicTransformList, matchesMaskList)
             
 
-    def InitConfig(self):
-
+    def InitConfig(self) -> None:
+        """
+        Function that loads the config file
+        """
         # Opening and laoding the config file
         with open("./config/config.yaml") as f:
             config = yaml.safe_load()
