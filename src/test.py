@@ -66,6 +66,7 @@ def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
 
         # Masking to get only the inliers
         good = [matches[i] for i in range(len(matches)) if matchesMask[i]==1]
+        print(len(good))
         
         # Drawn image
         img3 = cv.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=cv.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
@@ -80,7 +81,10 @@ def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
 if __name__ == '__main__':
     
     dirPath = os.path.join(os.getcwd(), 'imgs')
-    mosaic = Mosaic(dirPath)
+    with open("./config/config.yaml") as f:
+            config = yaml.safe_load(f)
+
+    mosaic = Mosaic(dirPath, config)
 
     # Loading images
     mosaic.imageList = LoadImages(mosaic.dirPath, (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
@@ -91,6 +95,7 @@ if __name__ == '__main__':
     kernelSize = 3
     for img in mosaic.imageList:
         blurredImg = cv.GaussianBlur(img, (kernelSize, kernelSize), 0)
+        blurredImg = cv.normalize(blurredImg, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
         blurredImgList.append(blurredImg)
     
     # Overwriting the list with processed images

@@ -63,13 +63,10 @@ def DisplayImages(imageList: list[np.ndarray]) -> None:
 
 class Mosaic:
     
-    def __init__(self, dirPath):
+    def __init__(self, dirPath, config):
         
         self.dirPath = dirPath
         self.scaleDownFactor = 1
-
-        with open("./config/config.yaml") as f:
-            config = yaml.safe_load(f)
         
         self.siftParams = {
             "nFeatures": config["SIFT"]["nFeatures"],
@@ -171,7 +168,7 @@ class Mosaic:
 
             # Error handling in case of insufficient key-points
             if len(self.matchesList[idx]) < self.MIN_MATCH_CNT:
-                print("[ERROR]: Not enough matches are found! - {}/{}".format(len(self.matchesList[idx]), self.MIN_MATCH_CNT))
+                print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx, idx+1, len(self.matchesList[idx]), self.MIN_MATCH_CNT))
                 print("Exiting...")
                 exit()
 
@@ -189,6 +186,9 @@ class Mosaic:
             matchesMaskList.append(mask.ravel().tolist())
         
         return (homographicTransformList, matchesMaskList)
+    
+    def stitchImages(self) -> None:
+        pass
             
 
     def InitConfig(self) -> None:
