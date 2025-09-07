@@ -42,10 +42,11 @@ def testFeatureMatch(mosaic: Mosaic, displayFlag: bool=True)->None:
 
 def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
     
-    mosaic.homographyTransforms, mosaic.matchesMask = mosaic.computeHomography()
-
+    mosaic.HomographyTransforms, mosaic.matchesMaskList = mosaic.computeHomography()
+    
+    drawnImgList = []
     for idx in range(mosaic.imageCount - 1):
-
+        
         # Images
         img1 = mosaic.imageList[idx]
         img2 = mosaic.imageList[idx+1]
@@ -56,18 +57,20 @@ def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
 
         # Matches
         matches = mosaic.matchesList[idx]
+        matchesMask = mosaic.matchesMaskList[idx]
 
         # DrawParams
-        drawParams = dict(matchColor = (0,255,0), # Draw matches in green
+        drawParams = dict(matchColor = (0,255,0), # Draw matches in Green
                           singlePointColor = None,
-                          matchesMask = mosaic.matchesMask[idx], # Draw only inliers
-                          flags=2)
+                          matchesMask = matchesMask, # Draw only inliers
+                          flags = 2)
 
-        # maskedMatches = [matches[i] for i in range(len(matches)) if mosaic.matchesMask[0][i] == 1]
-        # print(maskedMatches)
-        # Draw image
-        drawnImgList = cv.drawMatches(img1, kp1, img2, kp2, matches, None, cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-
+        good = [matches[i] for i in range(len(matches)) if matchesMask[i]==1]
+        
+        # Drawn image
+        img3 = cv.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=cv.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
+        drawnImgList.append(img3)
+    
     if displayFlag:
         DisplayImages(drawnImgList)
     
