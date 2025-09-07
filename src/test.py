@@ -9,12 +9,15 @@ def testFeatures(mosaic: Mosaic, displayFlag: bool=True)->None:
         drawnImg = cv.drawKeypoints(img, kp, None)
         drawnImgList.append(drawnImg)
     
+    # Display the image if flag is set
     if displayFlag:
         DisplayImages(drawnImgList)
     
     return None
 
 def testFeatureMatch(mosaic: Mosaic, displayFlag: bool=True)->None:
+    
+    # Finding matches
     mosaic.findMatches()
     
     drawnImgList = []
@@ -35,6 +38,7 @@ def testFeatureMatch(mosaic: Mosaic, displayFlag: bool=True)->None:
         img3 = cv.drawMatchesKnn(img1, kp1, img2, kp2, matches, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
         drawnImgList.append(img3)
     
+    # Display the image if flag is set
     if displayFlag:
         DisplayImages(drawnImgList)
     
@@ -42,6 +46,7 @@ def testFeatureMatch(mosaic: Mosaic, displayFlag: bool=True)->None:
 
 def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
     
+    # Computing the homography between images and getting the masks
     mosaic.HomographyTransforms, mosaic.matchesMaskList = mosaic.computeHomography()
     
     drawnImgList = []
@@ -59,18 +64,14 @@ def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
         matches = mosaic.matchesList[idx]
         matchesMask = mosaic.matchesMaskList[idx]
 
-        # DrawParams
-        drawParams = dict(matchColor = (0,255,0), # Draw matches in Green
-                          singlePointColor = None,
-                          matchesMask = matchesMask, # Draw only inliers
-                          flags = 2)
-
+        # Masking to get only the inliers
         good = [matches[i] for i in range(len(matches)) if matchesMask[i]==1]
         
         # Drawn image
         img3 = cv.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=cv.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
         drawnImgList.append(img3)
     
+    # Display the image if flag is set
     if displayFlag:
         DisplayImages(drawnImgList)
     
