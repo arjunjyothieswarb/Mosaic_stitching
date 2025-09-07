@@ -89,6 +89,9 @@ class Mosaic:
         # Initializing the key-point list and the descriptor list
         self.kpList = []
         self.desList = []
+
+        # Setting the minimum number of matching key-points
+        self.MIN_MATCH_CNT = 10
     
 
     def extractFeatures(self, siftParams=None) -> tuple[list, list]:
@@ -121,6 +124,58 @@ class Mosaic:
             desList.append(des)
 
         return (kpList, desList)
+    
+    def findMatches(self):
+
+        # BF matcher with default params
+        bf = cv.BFMatcher()
+        self.matchesList = []
+
+        for idx in range(self.imageCount - 1):
+            matches = bf.knnMatch(self.desList[idx], self.desList[idx+1], k=2)
+
+            # Applying Lowe's ratio test
+            good = []
+            for m, n in matches:
+                if m.distance < 0.7*n.distance:
+                    good.append([m])
+            
+            # Appending good matches to match list
+            self.matchesList.append(good)
+        
+        return None
+
+    def computeHomography(self)->tuple[list, list]:
+
+        matchesMaskList = []
+        homographicTransformList = []
+        for idx in range(self.imageCount - 1):
+            
+            # Getting the key-points
+            kp1 = self.kpList[idx]
+            kp2 = self.kpList[idx+1]
+
+            # Error handling in case of insufficient key-points
+            if len(self.matchesList[idx]) < self.MIN_MATCH_CNT:
+                print("[ERROR]: Not enough matches are found! - {}/{}".format(len(self.matchesList[idx]), self.MIN_MATCH_CNT))
+                print("Exiting...")
+                exit()
+
+            matches = self.matchesList[idx]
+
+            # Extracting source pts and destination pts
+            srcPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
+            dstPts = np.float32([kp2[m.trainIdx].pt for [m] in matches]).reshape(-1,1,2)
+
+            # Computing the Homography
+            H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, 5.0)
+            
+            # Storing the Homography Transform and the Matches mask
+            homographicTransformList.append(H)
+            matchesMaskList.append(mask.ravel().tolist())
+        
+        return (homographicTransformList, matchesMaskList)
+            
 
     def InitConfig(self):
 

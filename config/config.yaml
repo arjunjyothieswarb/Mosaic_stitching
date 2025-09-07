@@ -1,6 +1,8 @@
 version: 1.0.0
 
-
+Preprocessing:
+    GaussianBlur:
+        kernelSize: 3
 
 SIFT:
     nFeatures: 0
