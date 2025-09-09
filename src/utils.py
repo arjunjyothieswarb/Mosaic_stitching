@@ -25,7 +25,7 @@ def LoadImages(dirPath: str, scale: tuple=None) -> list[np.ndarray]:
     # Reading all the images in order
     for file in sorted(fileNames):
         filePath = os.path.join(dirPath, file)
-        image = cv.imread(filePath)
+        image = cv.imread(filePath, cv.IMREAD_GRAYSCALE)
 
         if image is not None:
             if scale is not None:
@@ -187,7 +187,31 @@ class Mosaic:
         
         return (homographicTransformList, matchesMaskList)
     
-    def stitchImages(self) -> None:
+    
+    def stitchImages(self, imgList, homographicTransformList) -> None:
+
+        # Computing the Transform Matrix w.r.t the first image
+        tfNew = np.eye(3) # Identity matrix for the first image
+        transformList = []
+        for tf in homographicTransformList:
+            tfNew = tf @ tfNew
+            transformList.append(tfNew)
+        
+        # Stitching the images
+        finalImg = imgList[0]
+        for idx in range(self.imageCount - 1):
+            imageIdx = idx + 1
+            numRows, numCols = np.shape(finalImg) # Getting the image size
+
+            currMax_X = numCols
+            currMin_X = 0
+
+            currMax_Y = numRows
+            currMin_Y = 0
+
+            cornerPts = 
+
+
         pass
             
 
