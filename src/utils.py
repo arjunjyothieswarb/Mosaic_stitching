@@ -188,7 +188,7 @@ class Mosaic:
         return (homographicTransformList, matchesMaskList)
     
     
-    def stitchImages(self, imgList, homographicTransformList) -> None:
+    def stitchImages(self, imgList, homographicTransformList) -> np.array:
 
         # Computing the Transform Matrix w.r.t the first image
         tfNew = np.eye(3) # Identity matrix for the first image
@@ -229,11 +229,11 @@ class Mosaic:
             max_X, max_Y = np.max(warpedCornerPts, 0)
             min_X, min_Y = np.min(warpedCornerPts, 0)
 
-            currMax_X = np.max(currMax_X, max_X)
-            currMax_Y = np.max(currMax_Y, max_Y)
+            currMax_X = np.max((currMax_X, max_X))
+            currMax_Y = np.max((currMax_Y, max_Y))
 
-            currMin_X = np.min(currMin_X, min_X)
-            currMin_Y = np.min(currMin_Y, min_Y)
+            currMin_X = np.min((currMin_X, min_X))
+            currMin_Y = np.min((currMin_Y, min_Y))
 
             # Get the new height and width of the image
             newHeight = np.int32(currMax_X - currMin_X)
@@ -260,7 +260,9 @@ class Mosaic:
 
             # Stitching them together
             finalImg = finalImg + warpedImgMasked
-            print(finalImg.shape())
+            print(np.shape(finalImg))
+        
+        return finalImg
 
         pass
             

@@ -78,7 +78,10 @@ def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
     return None
 
 def testStitching(mosaic: Mosaic, displayFlag: bool=True)->None:
-    mosaic.stitchImages(mosaic.imageList, mosaic.HomographyTransforms)
+    finalImg = mosaic.stitchImages(mosaic.imageList, mosaic.HomographyTransforms)
+    
+    if displayFlag:
+        DisplayImages([finalImg])
     return None
 
 if __name__ == '__main__':
@@ -114,4 +117,4 @@ if __name__ == '__main__':
     testRANSAC(mosaic, False)
 
     # Test stitching
-    testStitching(mosaic, False)
+    testStitching(mosaic)
