@@ -73,11 +73,16 @@ def DisplayImages(imageList: list[np.ndarray], scale: tuple=None) -> None:
 
 class Mosaic:
     
-    def __init__(self, dirPath, config):
+    def __init__(self, config):
         
-        self.dirPath = dirPath
+        
         self.scaleDownFactor = 0.5
         
+        # Getting the image path
+        imgPath = config["Paths"]["imageDir"]
+        self.dirPath = os.path.join(os.getcwd(), imgPath)
+        
+        # Loading SIFT params
         self.siftParams = {
             "nFeatures": config["SIFT"]["nFeatures"],
             "nOctaveLayers": config["SIFT"]["nOctaveLayers"],
@@ -85,9 +90,12 @@ class Mosaic:
             "edgeThreshold": config["SIFT"]["edgeThreshold"],
             "sigma": config["SIFT"]["sigma"]
         }
+
+        self.lowes_const = config["FeatureMatching"]["lowes_const"]
+        self.RANSAC_THRESH = config["FeatureMatching"]["RANSAC_THRESH"]
         
-        # Loading the images
-        # self.imageList = LoadImages(self.dirPath, (self.scaleDownFactor, self.scaleDownFactor))
+        # Setting the minimum number of matching key-points
+        self.MIN_MATCH_CNT = config["FeatureMatching"]["MIN_MATCH_COUNT"]
         
         # Initializing the Image list
         self.imageList = []
@@ -97,8 +105,6 @@ class Mosaic:
         self.kpList = []
         self.desList = []
 
-        # Setting the minimum number of matching key-points
-        self.MIN_MATCH_CNT = 10
     
 
     def extractFeatures(self, siftParams=None) -> tuple[list, list]:
@@ -150,7 +156,7 @@ class Mosaic:
             # Applying Lowe's ratio test
             good = []
             for m, n in matches:
-                if m.distance < 0.7*n.distance:
+                if m.distance < self.lowes_const*n.distance:
                     good.append([m])
             
             # Appending good matches to match list
@@ -189,7 +195,7 @@ class Mosaic:
             dstPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
 
             # Computing the Homography
-            H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, 5.0)
+            H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
             
             # Storing the Homography Transform and the Matches mask
             homographicTransformList.append(H)

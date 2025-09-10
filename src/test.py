@@ -85,11 +85,11 @@ def testStitching(mosaic: Mosaic, scale: tuple=None)->None:
 
 if __name__ == '__main__':
     
-    dirPath = os.path.join(os.getcwd(), 'imgs')
+    # dirPath = os.path.join(os.getcwd(), 'imgs')
     with open("./config/config.yaml") as f:
             config = yaml.safe_load(f)
 
-    mosaic = Mosaic(dirPath, config)
+    mosaic = Mosaic(config)
     mosaic.scaleDownFactor = 1
 
     # Loading images

@@ -1,5 +1,8 @@
 version: 1.0.0
 
+Paths:
+    imageDir: "./imgs"
+
 Preprocessing:
     GaussianBlur:
         kernelSize: 3
@@ -11,4 +14,7 @@ SIFT:
     edgeThreshold: 20
     sigma: 1.4
 
-
+FeatureMatching:
+    lowes_const: 0.7
+    RANSAC_THRESH: 3.0
+    MIN_MATCH_COUNT: 10
