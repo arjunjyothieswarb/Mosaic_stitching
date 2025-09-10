@@ -66,7 +66,6 @@ def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
 
         # Masking to get only the inliers
         good = [matches[i] for i in range(len(matches)) if matchesMask[i]==1]
-        print(len(good))
         
         # Drawn image
         img3 = cv.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=cv.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
@@ -76,6 +75,10 @@ def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
     if displayFlag:
         DisplayImages(drawnImgList)
     
+    return None
+
+def testStitching(mosaic: Mosaic, displayFlag: bool=True)->None:
+    mosaic.stitchImages(mosaic.imageList, mosaic.HomographyTransforms)
     return None
 
 if __name__ == '__main__':
@@ -108,5 +111,7 @@ if __name__ == '__main__':
     testFeatureMatch(mosaic, False)
 
     # Test RANSAC filtering
-    testRANSAC(mosaic)
+    testRANSAC(mosaic, False)
 
+    # Test stitching
+    testStitching(mosaic, False)

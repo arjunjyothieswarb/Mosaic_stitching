@@ -199,18 +199,68 @@ class Mosaic:
         
         # Stitching the images
         finalImg = imgList[0]
+        translationMatrix = np.eye(3)
         for idx in range(self.imageCount - 1):
-            imageIdx = idx + 1
-            numRows, numCols = np.shape(finalImg) # Getting the image size
+            imageIdx = idx + 1 # Getting the image index
+            H = transformList[idx] # Getting the Homographic Transform
+            targetImg = imgList[imageIdx] # Getting the image to be warped
+            numRows, numCols = np.shape(finalImg) # Getting the in-progress mosaic image size
 
-            currMax_X = numCols
+            currMax_X = numRows
             currMin_X = 0
 
-            currMax_Y = numRows
+            currMax_Y = numCols
             currMin_Y = 0
 
-            cornerPts = 
+            height, width = np.shape(targetImg)
 
+            # Getting all the corner points of the target image
+            cornerPts = np.float32([ 
+                [        0,       0],
+                [        0, width-1],
+                [ height-1, width-1],
+                [ height-1,       0]
+            ]).reshape(-1,1,2) # float32 because perspectiveTransform function takes in float
+
+            # Computing the corners of the warped image
+            warpedCornerPts = cv.perspectiveTransform(cornerPts, H).reshape(4,2)
+            
+            # Getting the max and min values
+            max_X, max_Y = np.max(warpedCornerPts, 0)
+            min_X, min_Y = np.min(warpedCornerPts, 0)
+
+            currMax_X = np.max(currMax_X, max_X)
+            currMax_Y = np.max(currMax_Y, max_Y)
+
+            currMin_X = np.min(currMin_X, min_X)
+            currMin_Y = np.min(currMin_Y, min_Y)
+
+            # Get the new height and width of the image
+            newHeight = np.int32(currMax_X - currMin_X)
+            newWidth = np.int32(currMax_Y - currMin_Y)
+
+            # Computing the translational vectors and consequently, the matrix
+            tx = -currMin_X
+            ty = -currMin_Y
+            translationMatrix[0, 2] = tx
+            translationMatrix[1, 2] = ty
+
+            # Translating the in-progress Mosaic image
+            finalImg = cv.warpPerspective(finalImg, translationMatrix, (newHeight, newWidth))
+
+            # Accounting for the translation for the target image
+            H = translationMatrix @ H
+
+            # Warping the target image
+            warpedImg = cv.warpPerspective(targetImg, H, (newHeight, newWidth))
+
+            # Masking the overlapping parts
+            _, mask = cv.threshold(finalImg, 1, 255, cv.THRESH_BINARY_INV)
+            warpedImgMasked = cv.bitwise_and(warpedImg, mask)
+
+            # Stitching them together
+            finalImg = finalImg + warpedImgMasked
+            print(finalImg.shape())
 
         pass
             
