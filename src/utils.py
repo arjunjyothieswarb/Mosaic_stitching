@@ -3,7 +3,7 @@ import numpy as np
 import yaml
 import os
 
-def LoadImages(dirPath: str, scale: tuple=None) -> list[np.ndarray]:
+def LoadImages(dirPath: str, N: float=np.inf) -> list[np.ndarray]:
     """
     Loads all image files from the specified directory and returns them as a list of numpy arrays.
     Args:
@@ -23,13 +23,15 @@ def LoadImages(dirPath: str, scale: tuple=None) -> list[np.ndarray]:
     fileNames = [file for file in os.listdir(dirPath) if file.endswith((".tif", ".jpg", ".png"))]
     
     # Reading all the images in order
+    count = 0
     for file in sorted(fileNames):
         filePath = os.path.join(dirPath, file)
         image = cv.imread(filePath, cv.IMREAD_GRAYSCALE)
 
         if image is not None:
-            if scale is not None:
-                image = cv.resize(image, None, fx=scale[0], fy=scale[1], interpolation=cv.INTER_LINEAR)
+            count = count + 1
+            if count > N:
+                break
             imageList.append(image)
         else:
             print(f"Unable to open {file}! Ignoring {file}")
@@ -37,7 +39,7 @@ def LoadImages(dirPath: str, scale: tuple=None) -> list[np.ndarray]:
 
     return imageList
 
-def DisplayImages(imageList: list[np.ndarray]) -> None:
+def DisplayImages(imageList: list[np.ndarray], scale: tuple=None) -> None:
     """
     Displays a list of images in separate windows.
     Args:
@@ -52,11 +54,19 @@ def DisplayImages(imageList: list[np.ndarray]) -> None:
     for image in imageList:
         displayString = f"Image {count}"
         print(f"Displaying {displayString}.")
-
-        # Displaying the image, close window on key press
-        cv.imshow(displayString, image)
-        cv.waitKey()
-        cv.destroyAllWindows()
+        
+        if image is not None:
+            # Scaling the output image
+            if scale is not None:
+                image = cv.resize(image, None, fx=scale[0], fy=scale[1], interpolation=cv.INTER_LINEAR)
+            
+            # Displaying the image, close window on key press
+            cv.imshow(displayString, image)
+            cv.waitKey()
+            cv.destroyAllWindows()
+        
+        else:
+            continue
 
         count += 1
 
@@ -66,7 +76,7 @@ class Mosaic:
     def __init__(self, dirPath, config):
         
         self.dirPath = dirPath
-        self.scaleDownFactor = 1
+        self.scaleDownFactor = 0.5
         
         self.siftParams = {
             "nFeatures": config["SIFT"]["nFeatures"],
@@ -175,8 +185,8 @@ class Mosaic:
             matches = self.matchesList[idx]
 
             # Extracting source pts and destination pts
-            srcPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
-            dstPts = np.float32([kp2[m.trainIdx].pt for [m] in matches]).reshape(-1,1,2)
+            srcPts = np.float32([kp2[m.trainIdx].pt for [m] in matches]).reshape(-1,1,2)
+            dstPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
 
             # Computing the Homography
             H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, 5.0)
@@ -206,20 +216,20 @@ class Mosaic:
             targetImg = imgList[imageIdx] # Getting the image to be warped
             numRows, numCols = np.shape(finalImg) # Getting the in-progress mosaic image size
 
-            currMax_X = numRows
+            currMax_X = numCols
             currMin_X = 0
 
-            currMax_Y = numCols
+            currMax_Y = numRows
             currMin_Y = 0
 
             height, width = np.shape(targetImg)
 
             # Getting all the corner points of the target image
             cornerPts = np.float32([ 
-                [        0,       0],
-                [        0, width-1],
-                [ height-1, width-1],
-                [ height-1,       0]
+                [      0,        0],
+                [      0, height-1],
+                [width-1, height-1],
+                [width-1,        0]
             ]).reshape(-1,1,2) # float32 because perspectiveTransform function takes in float
 
             # Computing the corners of the warped image
@@ -236,8 +246,8 @@ class Mosaic:
             currMin_Y = np.min((currMin_Y, min_Y))
 
             # Get the new height and width of the image
-            newHeight = np.int32(currMax_X - currMin_X)
-            newWidth = np.int32(currMax_Y - currMin_Y)
+            newHeight = np.int32(currMax_Y - currMin_Y)
+            newWidth = np.int32(currMax_X - currMin_X)
 
             # Computing the translational vectors and consequently, the matrix
             tx = -currMin_X
@@ -246,21 +256,20 @@ class Mosaic:
             translationMatrix[1, 2] = ty
 
             # Translating the in-progress Mosaic image
-            finalImg = cv.warpPerspective(finalImg, translationMatrix, (newHeight, newWidth))
+            finalImg = cv.warpPerspective(finalImg, translationMatrix, (newWidth, newHeight))
 
             # Accounting for the translation for the target image
             H = translationMatrix @ H
 
             # Warping the target image
-            warpedImg = cv.warpPerspective(targetImg, H, (newHeight, newWidth))
+            warpedImg = cv.warpPerspective(targetImg, H, (newWidth, newHeight))
 
             # Masking the overlapping parts
-            _, mask = cv.threshold(finalImg, 1, 255, cv.THRESH_BINARY_INV)
-            warpedImgMasked = cv.bitwise_and(warpedImg, mask)
+            _, mask = cv.threshold(warpedImg, 1, 255, cv.THRESH_BINARY_INV)
+            warpedFinalImg = cv.bitwise_and(finalImg, mask)
 
             # Stitching them together
-            finalImg = finalImg + warpedImgMasked
-            print(np.shape(finalImg))
+            finalImg = warpedFinalImg + warpedImg
         
         return finalImg
 

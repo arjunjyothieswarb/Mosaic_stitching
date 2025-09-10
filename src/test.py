@@ -11,7 +11,7 @@ def testFeatures(mosaic: Mosaic, displayFlag: bool=True)->None:
     
     # Display the image if flag is set
     if displayFlag:
-        DisplayImages(drawnImgList)
+        DisplayImages(drawnImgList, (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
     
     return None
 
@@ -40,7 +40,7 @@ def testFeatureMatch(mosaic: Mosaic, displayFlag: bool=True)->None:
     
     # Display the image if flag is set
     if displayFlag:
-        DisplayImages(drawnImgList)
+        DisplayImages(drawnImgList, (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
     
     return None
 
@@ -73,15 +73,14 @@ def testRANSAC(mosaic: Mosaic, displayFlag: bool=True)->None:
     
     # Display the image if flag is set
     if displayFlag:
-        DisplayImages(drawnImgList)
+        DisplayImages(drawnImgList, (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
     
     return None
 
-def testStitching(mosaic: Mosaic, displayFlag: bool=True)->None:
+def testStitching(mosaic: Mosaic, scale: tuple=None)->None:
     finalImg = mosaic.stitchImages(mosaic.imageList, mosaic.HomographyTransforms)
     
-    if displayFlag:
-        DisplayImages([finalImg])
+    DisplayImages([finalImg], (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
     return None
 
 if __name__ == '__main__':
@@ -91,9 +90,10 @@ if __name__ == '__main__':
             config = yaml.safe_load(f)
 
     mosaic = Mosaic(dirPath, config)
+    mosaic.scaleDownFactor = 0.5
 
     # Loading images
-    mosaic.imageList = LoadImages(mosaic.dirPath, (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
+    mosaic.imageList = LoadImages(mosaic.dirPath, 2)
     mosaic.imageCount = len(mosaic.imageList) # Updating imageCount
 
     # Preprocessing
