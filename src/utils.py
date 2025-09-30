@@ -198,7 +198,6 @@ class Mosaic:
             dstPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
 
             # Computing the Homography
-            print(np.shape(srcPts))
             H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
 
             # Storing the Homography Transform and the Matches mask
@@ -223,6 +222,7 @@ class Mosaic:
         for idx in range(self.imageCount - 1):
             imageIdx = idx + 1 # Getting the image index
             H = transformList[idx] # Getting the Homographic Transform
+            H = translationMatrix @ H
             targetImg = imgList[imageIdx] # Getting the image to be warped
             numRows, numCols = finalImg.shape[:2] # Getting the in-progress mosaic image size
 
@@ -271,11 +271,11 @@ class Mosaic:
             # Accumulated translation matrix to be applied on new images
             translationMatrix = newTranslationMatrix @ translationMatrix
 
+            # Accounting for the translation for the target image
+            H = newTranslationMatrix @ H
+
             # Translating the in-progress Mosaic image
             finalImg = cv.warpPerspective(finalImg, newTranslationMatrix, (newWidth, newHeight))
-
-            # Accounting for the translation for the target image
-            H = translationMatrix @ H
 
             # Warping the target image
             warpedImg = cv.warpPerspective(targetImg, H, (newWidth, newHeight))
