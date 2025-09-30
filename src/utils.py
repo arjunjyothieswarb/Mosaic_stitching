@@ -3,7 +3,7 @@ import numpy as np
 import yaml
 import os
 
-def LoadImages(dirPath: str, N: float=np.inf) -> list[np.ndarray]:
+def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarray]:
     """
     Loads all image files from the specified directory and returns them as a list of numpy arrays.
     Args:
@@ -30,7 +30,9 @@ def LoadImages(dirPath: str, N: float=np.inf) -> list[np.ndarray]:
 
         if image is not None:
             count = count + 1
-            if count > N:
+            if count < start:
+                continue
+            if count > end:
                 break
             imageList.append(image)
         else:
@@ -117,12 +119,13 @@ class Mosaic:
         """
 
         # Creating the SIFT object
-        sift = cv.SIFT.create(
-            nfeatures = self.siftParams["nFeatures"],
-            nOctaveLayers = self.siftParams["nOctaveLayers"],
-            contrastThreshold = self.siftParams["contrastThreshold"],
-            edgeThreshold = self.siftParams["edgeThreshold"]
-        )
+        # sift = cv.SIFT.create(
+        #     nfeatures = self.siftParams["nFeatures"],
+        #     nOctaveLayers = self.siftParams["nOctaveLayers"],
+        #     contrastThreshold = self.siftParams["contrastThreshold"],
+        #     edgeThreshold = self.siftParams["edgeThreshold"]
+        # )
+        sift = cv.SIFT.create()
 
         kpList = []
         desList = []
@@ -195,8 +198,9 @@ class Mosaic:
             dstPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
 
             # Computing the Homography
+            print(np.shape(srcPts))
             H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
-            
+
             # Storing the Homography Transform and the Matches mask
             homographicTransformList.append(H)
             matchesMaskList.append(mask.ravel().tolist())
@@ -204,7 +208,7 @@ class Mosaic:
         return (homographicTransformList, matchesMaskList)
     
     
-    def stitchImages(self, imgList, homographicTransformList) -> np.array:
+    def stitchImages(self, imgList: list[np.array], homographicTransformList: list[np.array]) -> np.array:
 
         # Computing the Transform Matrix w.r.t the first image
         tfNew = np.eye(3) # Identity matrix for the first image
@@ -220,7 +224,7 @@ class Mosaic:
             imageIdx = idx + 1 # Getting the image index
             H = transformList[idx] # Getting the Homographic Transform
             targetImg = imgList[imageIdx] # Getting the image to be warped
-            numRows, numCols = np.shape(finalImg) # Getting the in-progress mosaic image size
+            numRows, numCols = finalImg.shape[:2] # Getting the in-progress mosaic image size
 
             currMax_X = numCols
             currMin_X = 0
@@ -258,11 +262,17 @@ class Mosaic:
             # Computing the translational vectors and consequently, the matrix
             tx = -currMin_X
             ty = -currMin_Y
-            translationMatrix[0, 2] = tx
-            translationMatrix[1, 2] = ty
+
+            # Compute the off-set to keep the in-progress mosaic on screen
+            newTranslationMatrix = np.eye(3)
+            newTranslationMatrix[0, 2] = tx
+            newTranslationMatrix[1, 2] = ty
+
+            # Accumulated translation matrix to be applied on new images
+            translationMatrix = newTranslationMatrix @ translationMatrix
 
             # Translating the in-progress Mosaic image
-            finalImg = cv.warpPerspective(finalImg, translationMatrix, (newWidth, newHeight))
+            finalImg = cv.warpPerspective(finalImg, newTranslationMatrix, (newWidth, newHeight))
 
             # Accounting for the translation for the target image
             H = translationMatrix @ H

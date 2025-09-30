@@ -10,11 +10,11 @@ Preprocessing:
 SIFT:
     nFeatures: 0
     nOctaveLayers: 3
-    contrastThreshold: 0.02
-    edgeThreshold: 20
-    sigma: 1.4
+    contrastThreshold: 0.03 #0.03
+    edgeThreshold: 10 #20
+    sigma: 1.6 #1.4
 
 FeatureMatching:
-    lowes_const: 0.7
-    RANSAC_THRESH: 3.0
+    lowes_const: 0.75 #0.75
+    RANSAC_THRESH: 8.0 #3..0
     MIN_MATCH_COUNT: 10

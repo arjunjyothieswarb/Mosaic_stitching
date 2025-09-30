@@ -90,10 +90,10 @@ if __name__ == '__main__':
             config = yaml.safe_load(f)
 
     mosaic = Mosaic(config)
-    mosaic.scaleDownFactor = 1
+    mosaic.scaleDownFactor = 0.7
 
     # Loading images
-    mosaic.imageList = LoadImages(mosaic.dirPath)
+    mosaic.imageList = LoadImages(mosaic.dirPath, 3)
     mosaic.imageCount = len(mosaic.imageList) # Updating imageCount
 
     # Preprocessing
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     kernelSize = 3
     for img in mosaic.imageList:
         blurredImg = cv.GaussianBlur(img, (kernelSize, kernelSize), 0)
-        # blurredImg = cv.normalize(blurredImg, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+        blurredImg = cv.normalize(blurredImg, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
         blurredImgList.append(blurredImg)
     
     # Overwriting the list with processed images
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     testFeatureMatch(mosaic, False)
 
     # Test RANSAC filtering
-    testRANSAC(mosaic, True)
+    testRANSAC(mosaic, False)
 
     # Test stitching
     testStitching(mosaic)
