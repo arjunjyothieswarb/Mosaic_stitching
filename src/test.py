@@ -93,7 +93,7 @@ if __name__ == '__main__':
     mosaic.scaleDownFactor = 0.7
 
     # Loading images
-    mosaic.imageList = LoadImages(mosaic.dirPath, 3)
+    mosaic.imageList = LoadImages(mosaic.dirPath)
     mosaic.imageCount = len(mosaic.imageList) # Updating imageCount
 
     # Preprocessing
