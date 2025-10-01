@@ -107,9 +107,12 @@ class Mosaic:
         self.kpList = []
         self.desList = []
 
+        # BF matcher with default params
+        self.bf = cv.BFMatcher()        
+
     
 
-    def extractFeatures(self, siftParams=None) -> tuple[list, list]:
+    def extractFeatures(self, imageList, siftParams=None) -> tuple[list, list]:
         """
         Extracts SIFT keypoints and descriptors from each image in the image list.
         Returns:
@@ -131,7 +134,7 @@ class Mosaic:
         desList = []
 
         # Detecting and computing features and descriptors
-        for image in self.imageList:
+        for image in imageList:
             
             kp, des = sift.detectAndCompute(image, None)
 
@@ -141,7 +144,7 @@ class Mosaic:
 
         return (kpList, desList)
     
-    def findMatches(self) -> None:
+    def findMatches(self, idx1, idx2) -> list:
         """
         Finds matching key-points between consecutive images in the image list.
         Updates matchesList of the object. 
@@ -149,23 +152,17 @@ class Mosaic:
             None
         """
 
-        # BF matcher with default params
-        bf = cv.BFMatcher()
-        self.matchesList = []
-
-        for idx in range(self.imageCount - 1):
-            matches = bf.knnMatch(self.desList[idx], self.desList[idx+1], k=2)
-
-            # Applying Lowe's ratio test
-            good = []
-            for m, n in matches:
-                if m.distance < self.lowes_const*n.distance:
-                    good.append([m])
-            
-            # Appending good matches to match list
-            self.matchesList.append(good)
+        # Getting the matches
+        matches = self.bf.knnMatch(self.desList[idx1], self.desList[idx2], k=2)
+        good = []
         
-        return None
+        # Using Lowe's ratio to retain good matches
+        for m,n in matches:
+            if m.distance < self.lowes_const*n.distance:
+                good.append([m])
+        
+        return matches
+
 
     def computeHomography(self) -> tuple[list, list]:
         """
