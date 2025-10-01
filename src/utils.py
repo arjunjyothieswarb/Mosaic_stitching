@@ -96,6 +96,7 @@ class Mosaic:
             "sigma": config["SIFT"]["sigma"]
         }
 
+        self.scaleDownFactor = config["ScaleFactor"]
         self.lowes_const = config["FeatureMatching"]["lowes_const"]
         self.RANSAC_THRESH = config["FeatureMatching"]["RANSAC_THRESH"]
         
@@ -110,6 +111,7 @@ class Mosaic:
         # Initializing the key-point list and the descriptor list
         self.kpList = []
         self.desList = []
+
 
     
     def extractFeatures(self, imageList=None, siftParams=None) -> tuple[list, list]:

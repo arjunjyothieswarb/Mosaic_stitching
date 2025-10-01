@@ -1,7 +1,13 @@
-from utils import *
 import os
+import math
+import numpy as np
+
 import cv2 as cv
 
+import gtsam
+import gtsam.utils.plot as gtsam_plot
+
+from utils import *
 
 
 if __name__ == '__main__':
@@ -10,8 +16,8 @@ if __name__ == '__main__':
     with open("./config/config.yaml") as f:
             config = yaml.safe_load(f)
 
+    # Initializing Mosiac object
     mosaic = Mosaic(config)
-    mosaic.scaleDownFactor = config["ScaleFactor"]
 
     # Loading images
     mosaic.imageList,  mosaic.grayList = LoadImages(mosaic.dirPath)
