@@ -1,7 +1,9 @@
 version: 1.0.0
 
 Paths:
-    imageDir: "./imgs"
+    imageDir: "./imgs/Personal"
+
+ScaleFactor: 0.3
 
 Preprocessing:
     GaussianBlur:
