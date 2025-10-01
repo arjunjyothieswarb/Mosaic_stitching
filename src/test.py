@@ -90,10 +90,10 @@ if __name__ == '__main__':
             config = yaml.safe_load(f)
 
     mosaic = Mosaic(config)
-    mosaic.scaleDownFactor = 0.7
+    mosaic.scaleDownFactor = config["ScaleFactor"]
 
     # Loading images
-    mosaic.imageList = LoadImages(mosaic.dirPath)
+    mosaic.imageList,  mosaic.grayList = LoadImages(mosaic.dirPath)
     mosaic.imageCount = len(mosaic.imageList) # Updating imageCount
 
     # Preprocessing

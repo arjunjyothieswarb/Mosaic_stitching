@@ -18,6 +18,7 @@ def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarr
     """
 
     imageList = []
+    grayList = []
     
     # Getting all the image files in the directory
     fileNames = [file for file in os.listdir(dirPath) if file.endswith((".tif", ".jpg", ".png"))]
@@ -26,7 +27,8 @@ def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarr
     count = 0
     for file in sorted(fileNames):
         filePath = os.path.join(dirPath, file)
-        image = cv.imread(filePath, cv.IMREAD_GRAYSCALE)
+        image = cv.imread(filePath)
+        gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 
         if image is not None:
             count = count + 1
@@ -35,11 +37,12 @@ def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarr
             if count > end:
                 break
             imageList.append(image)
+            grayList.append(image)
         else:
             print(f"Unable to open {file}! Ignoring {file}")
             continue
 
-    return imageList
+    return imageList, grayList
 
 def DisplayImages(imageList: list[np.ndarray], scale: tuple=None) -> None:
     """
@@ -101,6 +104,7 @@ class Mosaic:
         
         # Initializing the Image list
         self.imageList = []
+        self.grayList = []
         self.imageCount = 0
 
         # Initializing the key-point list and the descriptor list
@@ -108,8 +112,7 @@ class Mosaic:
         self.desList = []
 
     
-
-    def extractFeatures(self, siftParams=None) -> tuple[list, list]:
+    def extractFeatures(self, siftParams=None, imageList=None) -> tuple[list, list]:
         """
         Extracts SIFT keypoints and descriptors from each image in the image list.
         Returns:
@@ -117,6 +120,9 @@ class Mosaic:
                 - kpList: A list of keypoints for each image.
                 - desList: A list of descriptors for each image.
         """
+
+        if imageList == None:
+            imageList = self.grayList
 
         # Creating the SIFT object
         # sift = cv.SIFT.create(
@@ -131,7 +137,7 @@ class Mosaic:
         desList = []
 
         # Detecting and computing features and descriptors
-        for image in self.imageList:
+        for image in imageList:
             
             kp, des = sift.detectAndCompute(image, None)
 
@@ -140,6 +146,7 @@ class Mosaic:
             desList.append(des)
 
         return (kpList, desList)
+    
     
     def findMatches(self) -> None:
         """
@@ -232,7 +239,7 @@ class Mosaic:
             currMax_Y = numRows
             currMin_Y = 0
 
-            height, width = np.shape(targetImg)
+            height, width = np.shape(targetImg)[:2]
 
             # Getting all the corner points of the target image
             cornerPts = np.float32([ 
