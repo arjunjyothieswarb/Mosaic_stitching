@@ -20,13 +20,15 @@ if __name__ == '__main__':
     # Preprocessing
     blurredImgList = []
     kernelSize = 3
+    clahe = cv.createCLAHE(clipLimit=5)
     for img in mosaic.grayList:
         blurredImg = cv.GaussianBlur(img, (kernelSize, kernelSize), 0)
         blurredImg = cv.normalize(blurredImg, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+        blurredImg = clahe.apply(blurredImg)
         blurredImgList.append(blurredImg)
     
     # Overwriting the list with processed images
-    # mosaic.grayList = blurredImgList
+    mosaic.grayList = blurredImgList
 
     # Extracting features
     mosaic.kpList, mosaic.desList = mosaic.extractFeatures(mosaic.grayList)

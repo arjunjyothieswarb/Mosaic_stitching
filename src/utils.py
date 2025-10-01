@@ -37,7 +37,7 @@ def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarr
             if count > end:
                 break
             imageList.append(image)
-            grayList.append(image)
+            grayList.append(gray)
         else:
             print(f"Unable to open {file}! Ignoring {file}")
             continue
@@ -184,7 +184,7 @@ class Mosaic:
 
         # Error handling in case of insufficient key-points
         if len(matches) < self.MIN_MATCH_CNT:
-            print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx, idx+1, len(self.matchesList[idx]), self.MIN_MATCH_CNT))
+            print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx1, idx2, len(self.matchesList[idx1]), self.MIN_MATCH_CNT))
             print("Exiting...")
             exit()
         
