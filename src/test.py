@@ -93,15 +93,18 @@ if __name__ == '__main__':
     mosaic.scaleDownFactor = config["ScaleFactor"]
 
     # Loading images
-    mosaic.imageList,  mosaic.grayList = LoadImages(mosaic.dirPath, 0, 4)
+    mosaic.imageList,  mosaic.grayList = LoadImages(mosaic.dirPath)
     mosaic.imageCount = len(mosaic.imageList) # Updating imageCount
 
     # Preprocessing
     blurredImgList = []
     kernelSize = 3
-    for img in mosaic.imageList:
+    # Creating a CLAHE object
+    clahe = cv.createCLAHE(clipLimit=5)
+    for img in mosaic.grayList:
         blurredImg = cv.GaussianBlur(img, (kernelSize, kernelSize), 0)
-        blurredImg = cv.normalize(blurredImg, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+        blurredImg = cv.normalize(blurredImg, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U) 
+        blurredImg = clahe.apply(blurredImg)
         blurredImgList.append(blurredImg)
     
     # Overwriting the list with processed images

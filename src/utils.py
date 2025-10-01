@@ -37,7 +37,7 @@ def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarr
             if count > end:
                 break
             imageList.append(image)
-            grayList.append(image)
+            grayList.append(gray)
         else:
             print(f"Unable to open {file}! Ignoring {file}")
             continue

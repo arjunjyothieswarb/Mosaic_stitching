@@ -18,5 +18,5 @@ SIFT:
 
 FeatureMatching:
     lowes_const: 0.75 #0.75
-    RANSAC_THRESH: 8.0 #8.0
+    RANSAC_THRESH: 3.0 #8.0
     MIN_MATCH_COUNT: 10
