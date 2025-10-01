@@ -125,13 +125,13 @@ class Mosaic:
             imageList = self.grayList
 
         # Creating the SIFT object
-        # sift = cv.SIFT.create(
-        #     nfeatures = self.siftParams["nFeatures"],
-        #     nOctaveLayers = self.siftParams["nOctaveLayers"],
-        #     contrastThreshold = self.siftParams["contrastThreshold"],
-        #     edgeThreshold = self.siftParams["edgeThreshold"]
-        # )
-        sift = cv.SIFT.create()
+        sift = cv.SIFT.create(
+            nfeatures = self.siftParams["nFeatures"],
+            nOctaveLayers = self.siftParams["nOctaveLayers"],
+            contrastThreshold = self.siftParams["contrastThreshold"],
+            edgeThreshold = self.siftParams["edgeThreshold"]
+        )
+        # sift = cv.SIFT.create()
 
         kpList = []
         desList = []

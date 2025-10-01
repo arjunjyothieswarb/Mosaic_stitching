@@ -93,7 +93,7 @@ if __name__ == '__main__':
     mosaic.scaleDownFactor = config["ScaleFactor"]
 
     # Loading images
-    mosaic.imageList,  mosaic.grayList = LoadImages(mosaic.dirPath)
+    mosaic.imageList,  mosaic.grayList = LoadImages(mosaic.dirPath, 0, 4)
     mosaic.imageCount = len(mosaic.imageList) # Updating imageCount
 
     # Preprocessing
@@ -105,7 +105,7 @@ if __name__ == '__main__':
         blurredImgList.append(blurredImg)
     
     # Overwriting the list with processed images
-    mosaic.imageList = blurredImgList
+    mosaic.grayList = blurredImgList
 
     # Test feature extraction
     testFeatures(mosaic, False)
