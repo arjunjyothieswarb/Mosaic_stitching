@@ -18,6 +18,7 @@ def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarr
     """
 
     imageList = []
+    grayList = []
     
     # Getting all the image files in the directory
     fileNames = [file for file in os.listdir(dirPath) if file.endswith((".tif", ".jpg", ".png"))]
@@ -26,7 +27,8 @@ def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarr
     count = 0
     for file in sorted(fileNames):
         filePath = os.path.join(dirPath, file)
-        image = cv.imread(filePath, cv.IMREAD_GRAYSCALE)
+        image = cv.imread(filePath)
+        gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 
         if image is not None:
             count = count + 1
@@ -35,11 +37,12 @@ def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarr
             if count > end:
                 break
             imageList.append(image)
+            grayList.append(gray)
         else:
             print(f"Unable to open {file}! Ignoring {file}")
             continue
 
-    return imageList
+    return imageList, grayList
 
 def DisplayImages(imageList: list[np.ndarray], scale: tuple=None) -> None:
     """
@@ -93,6 +96,7 @@ class Mosaic:
             "sigma": config["SIFT"]["sigma"]
         }
 
+        self.scaleDownFactor = config["ScaleFactor"]
         self.lowes_const = config["FeatureMatching"]["lowes_const"]
         self.RANSAC_THRESH = config["FeatureMatching"]["RANSAC_THRESH"]
         
@@ -101,6 +105,7 @@ class Mosaic:
         
         # Initializing the Image list
         self.imageList = []
+        self.grayList = []
         self.imageCount = 0
 
         # Initializing the key-point list and the descriptor list
@@ -112,7 +117,7 @@ class Mosaic:
 
     
 
-    def extractFeatures(self, imageList, siftParams=None) -> tuple[list, list]:
+    def extractFeatures(self, imageList=None, siftParams=None) -> tuple[list, list]:
         """
         Extracts SIFT keypoints and descriptors from each image in the image list.
         Returns:
@@ -121,14 +126,17 @@ class Mosaic:
                 - desList: A list of descriptors for each image.
         """
 
+        if imageList == None:
+            imageList = self.grayList
+
         # Creating the SIFT object
-        # sift = cv.SIFT.create(
-        #     nfeatures = self.siftParams["nFeatures"],
-        #     nOctaveLayers = self.siftParams["nOctaveLayers"],
-        #     contrastThreshold = self.siftParams["contrastThreshold"],
-        #     edgeThreshold = self.siftParams["edgeThreshold"]
-        # )
-        sift = cv.SIFT.create()
+        sift = cv.SIFT.create(
+            nfeatures = self.siftParams["nFeatures"],
+            nOctaveLayers = self.siftParams["nOctaveLayers"],
+            contrastThreshold = self.siftParams["contrastThreshold"],
+            edgeThreshold = self.siftParams["edgeThreshold"]
+        )
+        # sift = cv.SIFT.create()
 
         kpList = []
         desList = []
@@ -144,7 +152,9 @@ class Mosaic:
 
         return (kpList, desList)
     
-    def findMatches(self, idx1, idx2) -> list:
+    
+    def findMatches(self, idx1: int, idx2: int) -> list:
+
         """
         Finds matching key-points between consecutive images in the image list.
         Updates matchesList of the object. 
@@ -152,56 +162,46 @@ class Mosaic:
             None
         """
 
-        # Getting the matches
-        matches = self.bf.knnMatch(self.desList[idx1], self.desList[idx2], k=2)
+        # BF matcher with default params
+        bf = cv.BFMatcher()
+        matchesList = []
+
+        matches = bf.knnMatch(self.desList[idx1], self.desList[idx2], k=2)
+
+        # Applying Lowe's ratio test
         good = []
-        
-        # Using Lowe's ratio to retain good matches
-        for m,n in matches:
+        for m, n in matches:
             if m.distance < self.lowes_const*n.distance:
                 good.append([m])
         
-        return matches
+        return good
 
 
-    def computeHomography(self) -> tuple[list, list]:
-        """
-        Computes the homographic transform between consecutive images in the image list. The
-        function also returns the mask to remove all the outliers.
-        Returns:
-            tuple[list, list]: A tuple containing two lists:
-                - homographicTransformList: List of homographic transforms between consecutive images
-                - matchesMaskList: List of masks that can be used to mask the outlying matches
-        """
+    def computeHomography(self, idx1, idx2) -> tuple[list, list]:
 
-        matchesMaskList = []
-        homographicTransformList = []
-        for idx in range(self.imageCount - 1):
-            
-            # Getting the key-points
-            kp1 = self.kpList[idx]
-            kp2 = self.kpList[idx+1]
+        # matchesMaskList = []
+        # homographicTransformList = []
 
-            # Error handling in case of insufficient key-points
-            if len(self.matchesList[idx]) < self.MIN_MATCH_CNT:
-                print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx, idx+1, len(self.matchesList[idx]), self.MIN_MATCH_CNT))
-                print("Exiting...")
-                exit()
 
-            matches = self.matchesList[idx]
+        kp1 = self.kpList[idx1]
+        kp2 = self.kpList[idx2]
 
-            # Extracting source pts and destination pts
-            srcPts = np.float32([kp2[m.trainIdx].pt for [m] in matches]).reshape(-1,1,2)
-            dstPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
+        matches = self.findMatches(idx1, idx2)
 
-            # Computing the Homography
-            H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
-
-            # Storing the Homography Transform and the Matches mask
-            homographicTransformList.append(H)
-            matchesMaskList.append(mask.ravel().tolist())
+        # Error handling in case of insufficient key-points
+        if len(matches) < self.MIN_MATCH_CNT:
+            print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx1, idx2, len(self.matchesList[idx1]), self.MIN_MATCH_CNT))
+            print("Exiting...")
+            exit()
         
-        return (homographicTransformList, matchesMaskList)
+        # Extracting source pts and destination pts
+        srcPts = np.float32([kp2[m.trainIdx].pt for [m] in matches]).reshape(-1,1,2)
+        dstPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
+
+        # Computing the Homography
+        H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
+
+        return H
     
     
     def stitchImages(self, imgList: list[np.array], homographicTransformList: list[np.array]) -> np.array:
@@ -229,7 +229,7 @@ class Mosaic:
             currMax_Y = numRows
             currMin_Y = 0
 
-            height, width = np.shape(targetImg)
+            height, width = np.shape(targetImg)[:2]
 
             # Getting all the corner points of the target image
             cornerPts = np.float32([ 

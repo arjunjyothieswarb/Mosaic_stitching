@@ -3,6 +3,8 @@ version: 1.0.0
 Paths:
     imageDir: "./imgs"
 
+ScaleFactor: 0.7
+
 Preprocessing:
     GaussianBlur:
         kernelSize: 3
