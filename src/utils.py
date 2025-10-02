@@ -112,8 +112,11 @@ class Mosaic:
         self.kpList = []
         self.desList = []
 
+        # BF matcher with default params
+        self.bf = cv.BFMatcher()        
 
     
+
     def extractFeatures(self, imageList=None, siftParams=None) -> tuple[list, list]:
         """
         Extracts SIFT keypoints and descriptors from each image in the image list.
@@ -151,6 +154,7 @@ class Mosaic:
     
     
     def findMatches(self, idx1: int, idx2: int) -> list:
+
         """
         Finds matching key-points between consecutive images in the image list.
         Updates matchesList of the object. 
