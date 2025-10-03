@@ -177,7 +177,7 @@ class Mosaic:
         return good
 
 
-    def computeAffine(self, idx1, idx2) -> tuple[list, list]:
+    def computeAffine(self, idx1, idx2) -> tuple[list, int]:
 
         # matchesMaskList = []
         # homographicTransformList = []
@@ -190,9 +190,7 @@ class Mosaic:
 
         # Error handling in case of insufficient key-points
         if len(matches) < self.MIN_MATCH_CNT:
-            print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx1, idx2, len(matches), self.MIN_MATCH_CNT))
-            print("Exiting...")
-            exit()
+            return [None, -1]
         
         # Extracting source pts and destination pts
         srcPts = np.float32([kp2[m.trainIdx].pt for [m] in matches]).reshape(-1,1,2)
@@ -206,7 +204,6 @@ class Mosaic:
 
         mask = mask.ravel().tolist()        
         lenMask = mask.count(1)
-        print(lenMask)
 
         return H, lenMask
     
