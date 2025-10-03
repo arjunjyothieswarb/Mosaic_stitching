@@ -190,7 +190,7 @@ class Mosaic:
 
         # Error handling in case of insufficient key-points
         if len(matches) < self.MIN_MATCH_CNT:
-            print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx1, idx2, len(self.matchesList[idx1]), self.MIN_MATCH_CNT))
+            print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx1, idx2, len(matches), self.MIN_MATCH_CNT))
             print("Exiting...")
             exit()
         
