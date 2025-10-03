@@ -29,7 +29,7 @@ if __name__ == '__main__':
     clahe = cv.createCLAHE(clipLimit=5)
     for img in mosaic.grayList:
         blurredImg = cv.GaussianBlur(img, (kernelSize, kernelSize), 0)
-        blurredImg = cv.normalize(blurredImg, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+        # blurredImg = cv.normalize(blurredImg, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
         blurredImg = clahe.apply(blurredImg)
         blurredImgList.append(blurredImg)
     
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     # Computing the Homographic transforms
     H_TransformList = []
     for i in range(len(mosaic.grayList) - 1):
-        H = mosaic.computeHomography(i, i+1)
+        H, _ = mosaic.computeAffine(i, i+1)
         H_TransformList.append(H)
     
     finalImage = mosaic.stitchImages(mosaic.imageList, H_TransformList)

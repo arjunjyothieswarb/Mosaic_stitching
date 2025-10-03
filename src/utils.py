@@ -177,7 +177,7 @@ class Mosaic:
         return good
 
 
-    def computeHomography(self, idx1, idx2) -> tuple[list, list]:
+    def computeAffine(self, idx1, idx2) -> tuple[list, list]:
 
         # matchesMaskList = []
         # homographicTransformList = []
@@ -199,9 +199,16 @@ class Mosaic:
         dstPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
 
         # Computing the Homography
-        H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
+        # H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
+        H_affine, mask = cv.estimateAffinePartial2D(srcPts, dstPts, None, cv.RANSAC, self.RANSAC_THRESH)
+        H = np.eye(3)
+        H[:2, :] = H_affine
 
-        return H
+        mask = mask.ravel().tolist()        
+        lenMask = mask.count(1)
+        print(lenMask)
+
+        return H, lenMask
     
     
     def stitchImages(self, imgList: list[np.array], homographicTransformList: list[np.array]) -> np.array:
