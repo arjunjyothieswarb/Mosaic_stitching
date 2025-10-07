@@ -64,11 +64,13 @@ if __name__ == '__main__':
             H, numMatches = mosaic.computeAffine(i, j)
 
             # Checking for sequential images
-            if j-i == 1:
+            if j - i == 1:
+                # Exit if sequential images don't have enough matches ### TODO: Try to continue using matches from non-sequential matches
                 if numMatches == -1:
                     print("[ERROR]: Not enough matches found between sequential images {} and {}! - {}/{}".format(i, j, numMatches, config["FeatureMatching"]["MIN_MATCH_COUNT"]))
                     print("Exiting...")
                 
+                # Computing the initail estimate and inserting it into the graph
                 H_actual = H @ H_actual
                 inital_estimate.insert(j, Aff2Pose(H_actual))
             
@@ -80,27 +82,38 @@ if __name__ == '__main__':
             pose = Aff2Pose(H)
             odomNoise = computeNoise(numMatches)
 
+            # Adding the factor pose between nodes
             graph.add(gtsam.BetweenFactorPose2(i, j, pose, odomNoise))
 
             # Updating the iterator
             j = j + 1
     
+    # Initializing the optimizer
     params = gtsam.GaussNewtonParams()
     optimizer = gtsam.GaussNewtonOptimizer(graph, inital_estimate, params)
 
+    # Running the solver
     result = optimizer.optimize()
-    marginals = gtsam.Marginals(graph, inital_estimate)
+    marginals = gtsam.Marginals(graph, inital_estimate) # Getting the marginals
 
-    for i in range(len(mosaic.grayList)):
-        gtsam_plot.plot_pose2(0, inital_estimate.atPose2(i), 10)
-        gtsam_plot.plot_pose2(1, result.atPose2(i), 10, marginals.marginalCovariance(i))
+    # Plotting the graph
+    # for i in range(len(mosaic.grayList)):
+    #     gtsam_plot.plot_pose2(0, inital_estimate.atPose2(i), 10)
+    #     gtsam_plot.plot_pose2(1, result.atPose2(i), 10, marginals.marginalCovariance(i))
     
     plt.show()
     
+    # Extracting the transforms from the graph
+    for i in range(result.size()):
+        transform = Pose2Aff(result.atPose2(i))
+        H_TransformList.append(transform)
+
+    # Stitching the image
+    finalImage = StichImagesFromGraph(mosaic.imageList, H_TransformList)
     
     
     # print("\nFactor Graph:\n{}".format(graph))
 
     # finalImage = mosaic.stitchImages(mosaic.imageList, H_TransformList)
 
-    # DisplayImages([finalImage], (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
+    DisplayImages([finalImage], (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
