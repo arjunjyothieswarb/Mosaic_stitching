@@ -53,11 +53,17 @@ if __name__ == '__main__':
     
     # Creating the graph
     H_TransformList = []
+    H_actual = np.eye(3)
     for i in range(len(mosaic.grayList) - 1):
         j = i + 1
         while(j < len(mosaic.grayList)):
             # Computing the Affine transform
             H, numMatches = mosaic.computeAffine(i, j)
+
+            # Checking for sequential images
+            if i-j == 1:
+                if numMatches == -1:
+                    
             
             # If less matches found, ignore
             if numMatches == -1:
@@ -72,8 +78,24 @@ if __name__ == '__main__':
             # Updating the iterator
             j = j + 1
     
+    inital_estimate = gtsam.Values()
+    # plt.figure()
+    for i in range(len(mosaic.grayList)):
+        inital_estimate.insert(i, gtsam.Pose2(Aff2Pose(np.eye(3))))
+    
+    params = gtsam.GaussNewtonParams()
+    optimizer = gtsam.GaussNewtonOptimizer(graph, inital_estimate, params)
+
+    result = optimizer.optimize()
+
+    for i in range(len(mosaic.grayList)):
+        gtsam_plot.plot_pose2(0, result.atPose2(i), 10)
+    
+    plt.show()
+        
+    
     # print("\nFactor Graph:\n{}".format(graph))
 
-    finalImage = mosaic.stitchImages(mosaic.imageList, H_TransformList)
+    # finalImage = mosaic.stitchImages(mosaic.imageList, H_TransformList)
 
-    DisplayImages([finalImage], (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
+    # DisplayImages([finalImage], (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
