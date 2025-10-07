@@ -101,19 +101,13 @@ if __name__ == '__main__':
     #     gtsam_plot.plot_pose2(0, inital_estimate.atPose2(i), 10)
     #     gtsam_plot.plot_pose2(1, result.atPose2(i), 10, marginals.marginalCovariance(i))
     
-    plt.show()
+    # plt.show()
     
     # Extracting the transforms from the graph
     for i in range(result.size()):
         transform = Pose2Aff(result.atPose2(i))
         H_TransformList.append(transform)
 
-    # Stitching the image
+    # Stitching the image and display
     finalImage = StichImagesFromGraph(mosaic.imageList, H_TransformList)
-    
-    
-    # print("\nFactor Graph:\n{}".format(graph))
-
-    # finalImage = mosaic.stitchImages(mosaic.imageList, H_TransformList)
-
     DisplayImages([finalImage], (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
