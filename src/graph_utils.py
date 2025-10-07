@@ -13,14 +13,16 @@ def Pose2Aff(pose: gtsam.Pose2) -> np.array:
 def computeNoise(numMatches:int) -> gtsam.noiseModel:
     
     # Setting the coeffs
-    coeff_a = 5 #10
-    coeff_b = 20 #200
-    coeff_c = 10 #100
+    coeff_a = 5 #5
+    coeff_b = 20 #20
+    coeff_c = 5 #5
+
+    coeff_r = 1e-4
     
     # Computing the noise
     sigma = coeff_a * (1/(1 + np.exp((numMatches - coeff_b)/coeff_c)))
 
-    return gtsam.noiseModel.Diagonal.Sigmas(np.array([sigma, sigma, math.radians(1e-4 * sigma)]))
+    return gtsam.noiseModel.Diagonal.Sigmas(np.array([sigma, sigma, math.radians(coeff_r * sigma)]))
 
 def StichImagesFromGraph(imageList: list[np.array], HList: list[np.array]):
     
