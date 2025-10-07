@@ -19,4 +19,5 @@ def computeNoise(numMatches:int) -> gtsam.noiseModel:
     # Computing the noise
     sigma = coeff_a * (1/(1 + np.exp((numMatches - coeff_b)/coeff_c)))
 
-    return gtsam.noiseModel.Diagonal.Sigmas(np.array([sigma, sigma, 1e-1]))
+    # return gtsam.noiseModel.Diagonal.Sigmas(np.array([100, 100, math.radians(1)]))
+    return gtsam.noiseModel.Diagonal.Sigmas(np.array([sigma, sigma, math.radians(0.1 * sigma)]))

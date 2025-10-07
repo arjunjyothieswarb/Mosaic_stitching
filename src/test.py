@@ -47,10 +47,13 @@ if __name__ == '__main__':
 
     # Initializing the graph
     graph = gtsam.NonlinearFactorGraph()
+    inital_estimate = gtsam.Values()
 
     # Adding the first image to graph with prior noise
     graph.add(gtsam.PriorFactorPose2(0, gtsam.Pose2(0, 0, 0), priorNoise))
+    inital_estimate.insert(0, gtsam.Pose2(0, 0, 0))
     
+
     # Creating the graph
     H_TransformList = []
     H_actual = np.eye(3)
@@ -61,9 +64,13 @@ if __name__ == '__main__':
             H, numMatches = mosaic.computeAffine(i, j)
 
             # Checking for sequential images
-            if i-j == 1:
+            if j-i == 1:
                 if numMatches == -1:
-                    
+                    print("[ERROR]: Not enough matches found between sequential images {} and {}! - {}/{}".format(i, j, numMatches, config["FeatureMatching"]["MIN_MATCH_COUNT"]))
+                    print("Exiting...")
+                
+                H_actual = H @ H_actual
+                inital_estimate.insert(j, Aff2Pose(H_actual))
             
             # If less matches found, ignore
             if numMatches == -1:
@@ -78,21 +85,19 @@ if __name__ == '__main__':
             # Updating the iterator
             j = j + 1
     
-    inital_estimate = gtsam.Values()
-    # plt.figure()
-    for i in range(len(mosaic.grayList)):
-        inital_estimate.insert(i, gtsam.Pose2(Aff2Pose(np.eye(3))))
-    
     params = gtsam.GaussNewtonParams()
     optimizer = gtsam.GaussNewtonOptimizer(graph, inital_estimate, params)
 
     result = optimizer.optimize()
+    marginals = gtsam.Marginals(graph, inital_estimate)
 
     for i in range(len(mosaic.grayList)):
-        gtsam_plot.plot_pose2(0, result.atPose2(i), 10)
+        gtsam_plot.plot_pose2(0, inital_estimate.atPose2(i), 10)
+        gtsam_plot.plot_pose2(1, result.atPose2(i), 10, marginals.marginalCovariance(i))
     
     plt.show()
-        
+    
+    
     
     # print("\nFactor Graph:\n{}".format(graph))
 
