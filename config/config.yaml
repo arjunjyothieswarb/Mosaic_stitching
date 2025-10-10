@@ -1,9 +1,10 @@
 version: 1.0.0
 
 Paths:
-    imageDir: "./imgs"
+    mode: 0
+    imageDir: "./imgs/6Images/"
 
-ScaleFactor: 0.7
+ScaleFactor: 0.5
 
 Preprocessing:
     GaussianBlur:

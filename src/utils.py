@@ -3,6 +3,22 @@ import numpy as np
 import yaml
 import os
 
+def Load29Images(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarray]:
+    
+    imageList_all = []
+    grayList_all = []
+    
+    # Getting all the image files in the directory
+    folders = ["first column", "second column", "third column", "fourth column"]
+    
+    for folder in folders:
+        dir = os.path.join(dirPath, folder)
+        imageList, grayList = LoadImages(dir, start, end)
+        imageList_all += imageList
+        grayList_all += grayList
+
+    return imageList_all, grayList_all
+
 def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarray]:
     """
     Loads all image files from the specified directory and returns them as a list of numpy arrays.

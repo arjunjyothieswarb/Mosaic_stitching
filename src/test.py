@@ -10,6 +10,7 @@ import gtsam.utils.plot as gtsam_plot
 
 from utils import *
 from graph_utils import *
+import log_utils as log
 
 with open("./config/config.yaml") as f:
         config = yaml.safe_load(f)
@@ -33,7 +34,10 @@ if __name__ == '__main__':
     mosaic = Mosaic(config)
 
     # Loading images
-    mosaic.imageList, mosaic.grayList = LoadImages(mosaic.dirPath)
+    if config["Paths"]["mode"] == 0:
+        mosaic.imageList, mosaic.grayList = LoadImages(mosaic.dirPath)
+    else:
+        mosaic.imageList, mosaic.grayList = Load29Images(mosaic.dirPath)
     mosaic.imageCount = len(mosaic.imageList) # Updating imageCount
     
     # Overwriting the list with processed images
@@ -58,6 +62,7 @@ if __name__ == '__main__':
     H_TransformList = []
     H_actual = np.eye(3)
     for i in range(len(mosaic.grayList) - 1):
+        log.info("Checking for Factors with image %i." % i)
         j = i + 1
         while(j < len(mosaic.grayList)):
             # Computing the Affine transform
@@ -67,7 +72,8 @@ if __name__ == '__main__':
             if j - i == 1:
                 # Exit if sequential images don't have enough matches ### TODO: Try to continue using matches from non-sequential matches
                 if numMatches == -1:
-                    print("[ERROR]: Not enough matches found between sequential images {} and {}! - {}/{}".format(i, j, numMatches, config["FeatureMatching"]["MIN_MATCH_COUNT"]))
+                    errorMsg = "Not enough matches found between sequential images {} and {}! - {}/{}".format(i, j, numMatches, config["FeatureMatching"]["MIN_MATCH_COUNT"])
+                    log.error(errorMsg)
                     print("Exiting...")
                 
                 # Computing the initail estimate and inserting it into the graph
@@ -76,6 +82,7 @@ if __name__ == '__main__':
             
             # If less matches found, ignore
             if numMatches == -1:
+                 j = j + 1
                  continue
             
             # Computing pose and noise
@@ -87,14 +94,17 @@ if __name__ == '__main__':
 
             # Updating the iterator
             j = j + 1
+    log.info("Completed constructing the graph.")
     
     # Initializing the optimizer
     params = gtsam.GaussNewtonParams()
     optimizer = gtsam.GaussNewtonOptimizer(graph, inital_estimate, params)
 
     # Running the solver
+    log.info("Running the Optimizer.")
     result = optimizer.optimize()
     marginals = gtsam.Marginals(graph, inital_estimate) # Getting the marginals
+    log.info("Opimization complete")
 
     # Plotting the graph
     # for i in range(len(mosaic.grayList)):
