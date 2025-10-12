@@ -1,10 +1,11 @@
 version: 1.0.0
 
 Paths:
-    mode: 0
-    imageDir: "./imgs/6Images/"
+    mode: 1
+    imageDir: "E:/Github/EECE7150/Assignment3/29images"
+    # imageDir: "./imgs/6Images/"
 
-ScaleFactor: 0.5
+ScaleFactor: 0.3
 
 Preprocessing:
     GaussianBlur:

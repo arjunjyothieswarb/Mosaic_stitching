@@ -16,7 +16,7 @@ def computeNoise(numMatches:int) -> gtsam.noiseModel:
     coeff_a = 5 #5
     coeff_b = 10 #10
     coeff_c = 5 #5
-    coeff_d = 0.0 #0.5
+    coeff_d = 0.1 #0.5
 
     coeff_r = 1e-4
     
