@@ -64,7 +64,7 @@ if __name__ == '__main__':
     for i in range(len(mosaic.grayList) - 1):
         log.info("Checking for Factors with image %i." % i)
         j = i + 1
-        while(j < len(mosaic.grayList)):
+        while(j < len(mosaic.grayList) and j - i < 30):
             # Computing the Affine transform
             H, numMatches = mosaic.computeAffine(i, j)
 
