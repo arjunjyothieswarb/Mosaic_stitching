@@ -1,11 +1,22 @@
 version: 1.0.0
 
-Paths:
-    mode: 1
-    imageDir: "E:/Github/EECE7150/Assignment3/29images"
-    # imageDir: "./imgs/6Images/"
+Dataset: "29Images"
 
-ScaleFactor: 0.3
+DataConfigs:
+    6Images:
+        mode: 0
+        imageDir: "./imgs/6Images/"    
+        ScaleFactor: 0.7
+
+    29Images:
+        mode: 1
+        imageDir: "E:/Github/EECE7150/Assignment3/29images"
+        ScaleFactor: 0.3
+
+    269Images:
+        mode: 0
+        imageDir: "E:/Github/EECE7150/Assignment3/tape018"
+        ScaleFactor: 0.1
 
 Preprocessing:
     GaussianBlur:

@@ -32,9 +32,10 @@ if __name__ == '__main__':
 
     # Initializing Mosiac object
     mosaic = Mosaic(config)
+    dataSet = config["Dataset"]
 
     # Loading images
-    if config["Paths"]["mode"] == 0:
+    if config["DataConfigs"][dataSet]["mode"] == 0:
         mosaic.imageList, mosaic.grayList = LoadImages(mosaic.dirPath)
     else:
         mosaic.imageList, mosaic.grayList = Load29Images(mosaic.dirPath)

@@ -96,11 +96,10 @@ class Mosaic:
     
     def __init__(self, config):
         
-        
-        self.scaleDownFactor = 0.5
-        
+                
         # Getting the image path
-        imgPath = config["Paths"]["imageDir"]
+        dataSet = config["Dataset"]
+        imgPath = config["DataConfigs"][dataSet]["imageDir"]
         self.dirPath = os.path.join(os.getcwd(), imgPath)
         
         # Loading SIFT params
@@ -112,7 +111,7 @@ class Mosaic:
             "sigma": config["SIFT"]["sigma"]
         }
 
-        self.scaleDownFactor = config["ScaleFactor"]
+        self.scaleDownFactor = config["DataConfigs"][dataSet]["ScaleFactor"]
         self.lowes_const = config["FeatureMatching"]["lowes_const"]
         self.RANSAC_THRESH = config["FeatureMatching"]["RANSAC_THRESH"]
         
