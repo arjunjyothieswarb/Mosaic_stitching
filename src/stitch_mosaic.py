@@ -35,10 +35,10 @@ if __name__ == '__main__':
     dataSet = config["Dataset"]
 
     # Loading images
-    if config["DataConfigs"][dataSet]["mode"] == 0:
-        mosaic.imageList, mosaic.grayList = LoadImages(mosaic.dirPath)
-    else:
+    if config["DataConfigs"][dataSet]["mode"] == 1:
         mosaic.imageList, mosaic.grayList = Load29Images(mosaic.dirPath)
+    else:
+        mosaic.imageList, mosaic.grayList = LoadImages(mosaic.dirPath)
     mosaic.imageCount = len(mosaic.imageList) # Updating imageCount
     
     # Overwriting the list with processed images
@@ -71,15 +71,15 @@ if __name__ == '__main__':
 
             # Checking for sequential images
             if j - i == 1:
-                # Exit if sequential images don't have enough matches ### TODO: Try to continue using matches from non-sequential matches
+                # Insert (0, 0, 0) for images without enough matches
                 if numMatches == -1:
-                    errorMsg = "Not enough matches found between sequential images {} and {}! - {}/{}".format(i, j, numMatches, config["FeatureMatching"]["MIN_MATCH_COUNT"])
-                    log.error(errorMsg)
-                    print("Exiting...")
-                
-                # Computing the initail estimate and inserting it into the graph
-                H_actual = H @ H_actual
-                inital_estimate.insert(j, Aff2Pose(H_actual))
+                    warnMsg = "Not enough matches found between sequential images {} and {}! - {}/{}".format(i, j, numMatches, config["FeatureMatching"]["MIN_MATCH_COUNT"])
+                    log.warn(warnMsg)
+                    inital_estimate.insert(j, gtsam.Pose2(0, 0, 0))
+                else:
+                    # Computing the initail estimate and inserting it into the graph
+                    H_actual = H @ H_actual
+                    inital_estimate.insert(j, Aff2Pose(H_actual))
             
             # If less matches found, ignore
             if numMatches == -1:
@@ -95,6 +95,7 @@ if __name__ == '__main__':
 
             # Updating the iterator
             j = j + 1
+
     log.info("Completed constructing the graph.")
     
     # Initializing the optimizer
@@ -120,5 +121,8 @@ if __name__ == '__main__':
         H_TransformList.append(transform)
 
     # Stitching the image and display
+    log.info("Stitching images")
     finalImage = StichImagesFromGraph(mosaic.imageList, H_TransformList)
+    log.info("Stitching complete")
+        
     DisplayImages([finalImage], (mosaic.scaleDownFactor, mosaic.scaleDownFactor))
