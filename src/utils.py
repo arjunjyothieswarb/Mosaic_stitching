@@ -3,6 +3,22 @@ import numpy as np
 import yaml
 import os
 
+def Load29Images(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarray]:
+    
+    imageList_all = []
+    grayList_all = []
+    
+    # Getting all the image files in the directory
+    folders = ["first column", "second column", "third column", "fourth column"]
+    
+    for folder in folders:
+        dir = os.path.join(dirPath, folder)
+        imageList, grayList = LoadImages(dir, start, end)
+        imageList_all += imageList
+        grayList_all += grayList
+
+    return imageList_all, grayList_all
+
 def LoadImages(dirPath: str, start: float=0, end: float=np.inf) -> list[np.ndarray]:
     """
     Loads all image files from the specified directory and returns them as a list of numpy arrays.
@@ -80,11 +96,10 @@ class Mosaic:
     
     def __init__(self, config):
         
-        
-        self.scaleDownFactor = 0.5
-        
+                
         # Getting the image path
-        imgPath = config["Paths"]["imageDir"]
+        dataSet = config["Dataset"]
+        imgPath = config["DataConfigs"][dataSet]["imageDir"]
         self.dirPath = os.path.join(os.getcwd(), imgPath)
         
         # Loading SIFT params
@@ -96,7 +111,7 @@ class Mosaic:
             "sigma": config["SIFT"]["sigma"]
         }
 
-        self.scaleDownFactor = config["ScaleFactor"]
+        self.scaleDownFactor = config["DataConfigs"][dataSet]["ScaleFactor"]
         self.lowes_const = config["FeatureMatching"]["lowes_const"]
         self.RANSAC_THRESH = config["FeatureMatching"]["RANSAC_THRESH"]
         
@@ -177,7 +192,7 @@ class Mosaic:
         return good
 
 
-    def computeHomography(self, idx1, idx2) -> tuple[list, list]:
+    def computeAffine(self, idx1, idx2) -> tuple[list, int]:
 
         # matchesMaskList = []
         # homographicTransformList = []
@@ -190,18 +205,22 @@ class Mosaic:
 
         # Error handling in case of insufficient key-points
         if len(matches) < self.MIN_MATCH_CNT:
-            print("[ERROR]: Not enough matches found between images {} and {}! - {}/{}".format(idx1, idx2, len(self.matchesList[idx1]), self.MIN_MATCH_CNT))
-            print("Exiting...")
-            exit()
+            return [None, -1]
         
         # Extracting source pts and destination pts
         srcPts = np.float32([kp2[m.trainIdx].pt for [m] in matches]).reshape(-1,1,2)
         dstPts = np.float32([kp1[m.queryIdx].pt for [m] in matches]).reshape(-1,1,2)
 
         # Computing the Homography
-        H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
+        # H, mask = cv.findHomography(srcPts, dstPts, cv.RANSAC, self.RANSAC_THRESH)
+        H_affine, mask = cv.estimateAffinePartial2D(srcPts, dstPts, None, cv.RANSAC, self.RANSAC_THRESH)
+        H = np.eye(3)
+        H[:2, :] = H_affine
 
-        return H
+        mask = mask.ravel().tolist()        
+        lenMask = mask.count(1)
+
+        return H, lenMask
     
     
     def stitchImages(self, imgList: list[np.array], homographicTransformList: list[np.array]) -> np.array:

@@ -1,9 +1,22 @@
 version: 1.0.0
 
-Paths:
-    imageDir: "./imgs"
+Dataset: "29Images"
 
-ScaleFactor: 0.7
+DataConfigs:
+    6Images:
+        mode: 0
+        imageDir: "./imgs/6Images/"    
+        ScaleFactor: 0.7
+
+    29Images:
+        mode: 1
+        imageDir: "E:/Github/EECE7150/Assignment3/29images"
+        ScaleFactor: 0.3
+
+    269Images:
+        mode: 0
+        imageDir: "E:/Github/EECE7150/Assignment3/tape018"
+        ScaleFactor: 0.1
 
 Preprocessing:
     GaussianBlur:
@@ -12,11 +25,11 @@ Preprocessing:
 SIFT:
     nFeatures: 0
     nOctaveLayers: 3
-    contrastThreshold: 0.04 #0.03
-    edgeThreshold: 10 #20
-    sigma: 1.6 #1.4
+    contrastThreshold: 0.03 #0.03
+    edgeThreshold: 20 #20
+    sigma: 1.4 #1.4
 
 FeatureMatching:
     lowes_const: 0.75 #0.75
-    RANSAC_THRESH: 5.0 #8.0
+    RANSAC_THRESH: 3.0 #8.0
     MIN_MATCH_COUNT: 10
