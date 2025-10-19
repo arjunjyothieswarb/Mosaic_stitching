@@ -1,6 +1,6 @@
 # Mosaic Stitching
 
-This repository contains a simple image processing pipeline to stitch multiple images together into a single mosaic using feature feature matching and graph based optimization (GTSAM). 
+This repository contains a simple image processing pipeline to stitch multiple images together into a single mosaic using feature matching and graph based optimization (GTSAM). 
 
 <p align="center">
     <img src="output\gtsam_29imgs.png" alt="6Images_nogtsam" width="60%">
