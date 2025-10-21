@@ -192,7 +192,7 @@ class Mosaic:
         return good
 
 
-    def computeAffine(self, idx1, idx2) -> tuple[list, int]:
+    def computeAffine(self, idx1, idx2) -> tuple[np.array, int]:
 
         # matchesMaskList = []
         # homographicTransformList = []
